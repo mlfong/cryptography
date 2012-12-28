@@ -12,7 +12,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-public class ADFGVXCipher
+public class ADFGVXCipher implements Cipher
 {
     private final static String ALPHABET = "ABCDEFGHIKLMNOPQRSTUVWXYZ0123456789 ";
     private final static String CIPHER = "ADFGVX";
@@ -42,11 +42,11 @@ public class ADFGVXCipher
         cipherTable.put('J', cipherTable.get('I'));
     }
     
-    public String encrypt(String s)
+    public String encrypt(String message)
     {
-        s = s.toUpperCase().replaceAll("[^a-zA-Z0-9 ]", "");
-        StringBuilder sb = new StringBuilder(s.length()*2);
-        for(Character c : s.toCharArray())
+        message = message.toUpperCase().replaceAll("[^a-zA-Z0-9 ]", "");
+        StringBuilder sb = new StringBuilder(message.length()*2);
+        for(Character c : message.toCharArray())
             sb.append(cipherTable.get(c));
         List<CipherColumn> tKeyTable = new ArrayList<CipherColumn>(transportationKey.length());
         for(Character c : transportationKey.toCharArray())
@@ -63,20 +63,20 @@ public class ADFGVXCipher
             sb.append(cc.column);
         return sb.toString();
     }
-    public String decrypt(String s)
+    public String decrypt(String encoded)
     {
-        StringBuilder sb = new StringBuilder(s.length());
-        int col = s.length()/transportationKey.length();
+        StringBuilder sb = new StringBuilder(encoded.length());
+        int col = encoded.length()/transportationKey.length();
         List<CipherColumn> sortedTKeyTable = new ArrayList<CipherColumn>(transportationKey.length());
         List<Character> sortedTKey = new ArrayList<Character>(transportationKey.length());
         for(Character c : transportationKey.toCharArray())
             sortedTKey.add(c);
         Collections.sort(sortedTKey);
         int j = 0;
-        for(int i = 0 ; i < s.length(); i += col)
+        for(int i = 0 ; i < encoded.length(); i += col)
         {
             sortedTKeyTable.add(new CipherColumn(sortedTKey.get(j)));
-            sortedTKeyTable.get(j++).add(s.substring(i,i+col));
+            sortedTKeyTable.get(j++).add(encoded.substring(i,i+col));
         }
         List<CipherColumn> origTKeyTable = new ArrayList<CipherColumn>(transportationKey.length());
         for(Character c : transportationKey.toCharArray())
@@ -96,7 +96,7 @@ public class ADFGVXCipher
         for(j = 0; j < col ; j++)
             for(int i = 0; i < origTKeyTable.size(); i++)
                 sb.append(origTKeyTable.get(i).column.charAt(j));
-        StringBuilder decrypt = new StringBuilder(s.length()/2);
+        StringBuilder decrypt = new StringBuilder(encoded.length()/2);
         for(j = 0; j < sb.length(); j+=2)
             if(reverseCipherTable.containsKey(sb.substring(j,j+2)))
                 decrypt.append(reverseCipherTable.get(sb.substring(j, j+2)));
