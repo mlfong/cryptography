@@ -1,11 +1,6 @@
 package cryptography.ciphers;
 
-import cryptography.exceptions.WrongKeyException;
-import cryptography.keys.IntKey;
-import cryptography.keys.Key;
-
-
-public class CaesarCipher implements Cipher
+public class CaesarCipher extends Cipher
 {
     private final int ASCII_MOD = 256;
     
@@ -13,36 +8,30 @@ public class CaesarCipher implements Cipher
     {
     }
 
-    @Override
-    public String encrypt(String message, Key key) throws WrongKeyException
+    public String encrypt(String message, int rotation)
     {
-        if(!(key instanceof IntKey))
-            throw new WrongKeyException();
         StringBuilder sb = new StringBuilder(message.length());
         for(Character c : message.toCharArray())
-            sb.append((char)((c+((IntKey)key).getValue())%ASCII_MOD));
+            sb.append((char)((c+(rotation)%ASCII_MOD)));
         return sb.toString();
     }
 
-    @Override
-    public String decrypt(String encoded, Key key) throws WrongKeyException
+    public String decrypt(String encoded, int rotation)
     {
-        if(!(key instanceof IntKey))
-            throw new WrongKeyException();
         StringBuilder sb = new StringBuilder(encoded.length());
         for(Character c : encoded.toCharArray())
-            sb.append((char)((c+256-((IntKey)key).getValue())%ASCII_MOD));
+            sb.append((char)((c-(rotation)%ASCII_MOD)));
         return sb.toString();
     }
 
-    public static void main(String[] args) throws WrongKeyException
+    public static void main(String[] args)
     {
-        Key key = new IntKey(15);
+        int rotation = 3;
         CaesarCipher cc = new CaesarCipher();
         String message = "Another great message!!101!1!";
-        String encrypt = cc.encrypt(message, key);
+        String encrypt = cc.encrypt(message, rotation);
         System.out.println(encrypt);
-        String decrypt = cc.decrypt(encrypt, key);
+        String decrypt = cc.decrypt(encrypt, rotation);
         System.out.println(decrypt);
     }
 

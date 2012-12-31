@@ -5,11 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import cryptography.exceptions.WrongKeyException;
-import cryptography.keys.Key;
-import cryptography.keys.TwoStringKey;
-
-public class FourSquareCipher implements Cipher
+public class FourSquareCipher extends Cipher
 {
     private static final String ALPHABET = "abcdefghiklmnopqrstuvwxyz0123456789 ";
 
@@ -89,13 +85,9 @@ public class FourSquareCipher implements Cipher
         return r * 6 + c;
     }
 
-    @Override
-    public String encrypt(String message, Key key) throws WrongKeyException
+    public String encrypt(String message, String key1, String key2)
     {
-        if (!(key instanceof TwoStringKey))
-            throw new WrongKeyException();
-        List<List<Character>> cipher = makeCipher(
-                ((TwoStringKey) key).getKey1(), ((TwoStringKey) key).getKey2());
+        List<List<Character>> cipher = makeCipher(key1, key2);
         message = message.toLowerCase().replaceAll("[^a-zA-Z0-9 ]", "")
                 .replaceAll("j", "i");
         if ((message.length() & 1) == 1)
@@ -118,13 +110,9 @@ public class FourSquareCipher implements Cipher
         return sb.toString();
     }
 
-    @Override
-    public String decrypt(String encoded, Key key) throws WrongKeyException
+    public String decrypt(String encoded, String key1, String key2)
     {
-        if (!(key instanceof TwoStringKey))
-            throw new WrongKeyException();
-        List<List<Character>> cipher = makeCipher(
-                ((TwoStringKey) key).getKey1(), ((TwoStringKey) key).getKey2());
+        List<List<Character>> cipher = makeCipher(key1, key2);
         StringBuilder sb = new StringBuilder(encoded.length());
         for (int i = 0; i < encoded.length(); i += 2)
         {
@@ -136,14 +124,14 @@ public class FourSquareCipher implements Cipher
         return sb.toString();
     }
 
-    public static void main(String[] args) throws WrongKeyException
+    public static void main(String[] args)
     {
-        Key key = new TwoStringKey("battle", "shipps");
-        Cipher cc = new FourSquareCipher();
+        String key1 = "battle", key2 = "shipppps";
+        FourSquareCipher cc = new FourSquareCipher();
         String message = "my favourite thing is 123";
-        String encoded = cc.encrypt(message, key);
+        String encoded = cc.encrypt(message, key1, key2);
         System.out.println(encoded);
-        String decoded = cc.decrypt(encoded, key);
+        String decoded = cc.decrypt(encoded, key1, key2);
         System.out.println(decoded);
     }
 }

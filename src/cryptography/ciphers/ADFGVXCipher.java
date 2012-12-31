@@ -14,22 +14,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import cryptography.exceptions.WrongKeyException;
-import cryptography.keys.IntStringKey;
-import cryptography.keys.Key;
-
-public class ADFGVXCipher implements Cipher
+public class ADFGVXCipher extends Cipher
 {
     private final static String ALPHABET = "abcdefghiklmnopqrstuvwxyz0123456789 ";
     private final static String CIPHER = "adfgvx";
     
-    public String encrypt(String message, Key key) throws WrongKeyException
+    public String encrypt(String message, String transportationKey, int seed)
     {
-        if(!(key instanceof IntStringKey))
-            throw new WrongKeyException();
-        String transportationKey = ((IntStringKey)key).getStrVal();
-        int seed = ((IntStringKey)key).getIntVal();
-        
         List<Character> substitutionKey = new ArrayList<Character>();
         for(Character c : ALPHABET.toCharArray())
             substitutionKey.add(c);
@@ -61,13 +52,8 @@ public class ADFGVXCipher implements Cipher
             sb.append(cc.column);
         return sb.toString();
     }
-    public String decrypt(String encoded, Key key) throws WrongKeyException
+    public String decrypt(String encoded, String transportationKey, int seed)
     {
-        if(!(key instanceof IntStringKey))
-            throw new WrongKeyException();
-        String transportationKey = ((IntStringKey)key).getStrVal();
-        int seed = ((IntStringKey)key).getIntVal();
-        
         List<Character> substitutionKey = new ArrayList<Character>();
         for(Character c : ALPHABET.toCharArray())
             substitutionKey.add(c);
@@ -163,14 +149,15 @@ public class ADFGVXCipher implements Cipher
         }
     }
     
-    public static void main(String[] args) throws WrongKeyException
+    public static void main(String[] args)
     {
-        Key key = new IntStringKey(42, "PROGRAMMER");
+        int seed = 42;
+        String key = "programmer";
         ADFGVXCipher cipher = new ADFGVXCipher();
         String message = "Wow what a great example message this is";
-        String encrypted = cipher.encrypt(message, key);
+        String encrypted = cipher.encrypt(message, key, seed);
         System.out.println(encrypted);
-        String decrypted = cipher.decrypt(encrypted,key);
+        String decrypted = cipher.decrypt(encrypted,key, seed);
         System.out.println(decrypted);
     }
 
