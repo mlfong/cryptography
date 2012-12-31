@@ -1,4 +1,4 @@
-package cryptography;
+package cryptography.ciphers;
 
 /*****
  * @author mlfong
@@ -11,40 +11,38 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
+import cryptography.exceptions.WrongKeyException;
+import cryptography.keys.IntStringKey;
+import cryptography.keys.Key;
 
 public class ADFGVXCipher implements Cipher
 {
-    private final static String ALPHABET = "ABCDEFGHIKLMNOPQRSTUVWXYZ0123456789 ";
-    private final static String CIPHER = "ADFGVX";
-    private List<Character> substitutionKey;
-    private String transportationKey;
-    private HashMap<Character, String> cipherTable;
-    private HashMap<String, Character> reverseCipherTable;
+    private final static String ALPHABET = "abcdefghiklmnopqrstuvwxyz0123456789 ";
+    private final static String CIPHER = "adfgvx";
     
-    public ADFGVXCipher(String tKey)
+    public String encrypt(String message, Key key) throws WrongKeyException
     {
-        substitutionKey = new ArrayList<Character>();
+        if(!(key instanceof IntStringKey))
+            throw new WrongKeyException();
+        String transportationKey = ((IntStringKey)key).getStrVal();
+        int seed = ((IntStringKey)key).getIntVal();
+        
+        List<Character> substitutionKey = new ArrayList<Character>();
         for(Character c : ALPHABET.toCharArray())
             substitutionKey.add(c);
-        Collections.shuffle(substitutionKey);
-        transportationKey = tKey;
-        cipherTable = new HashMap<Character, String>();
-        reverseCipherTable = new HashMap<String, Character>();
+        Collections.shuffle(substitutionKey, new Random(seed));
+        
+        Map<Character, String> cipherTable = new HashMap<Character, String>();
         int i = 0;
         for(Character c : CIPHER.toCharArray())
-        {
             for(Character c2: CIPHER.toCharArray())
-            {
-                reverseCipherTable.put(""+c+c2, substitutionKey.get(i));
                 cipherTable.put(substitutionKey.get(i++), ""+c+c2);
-            }
-        }
         cipherTable.put('J', cipherTable.get('I'));
-    }
-    
-    public String encrypt(String message)
-    {
-        message = message.toUpperCase().replaceAll("[^a-zA-Z0-9 ]", "");
+        
+        message = message.toLowerCase().replaceAll("[^a-zA-Z0-9 ]", "");
         StringBuilder sb = new StringBuilder(message.length()*2);
         for(Character c : message.toCharArray())
             sb.append(cipherTable.get(c));
@@ -54,7 +52,7 @@ public class ADFGVXCipher implements Cipher
         int r = transportationKey.length() - (sb.length() % transportationKey.length());
         while(r-- > 0)
             sb.append(substitutionKey.get((int)(Math.random()*substitutionKey.size())));
-        int i = 0;
+        i = 0;
         for(Character c : sb.toString().toCharArray())
             tKeyTable.get(i++%tKeyTable.size()).add(c);
         Collections.sort(tKeyTable);
@@ -63,8 +61,24 @@ public class ADFGVXCipher implements Cipher
             sb.append(cc.column);
         return sb.toString();
     }
-    public String decrypt(String encoded)
+    public String decrypt(String encoded, Key key) throws WrongKeyException
     {
+        if(!(key instanceof IntStringKey))
+            throw new WrongKeyException();
+        String transportationKey = ((IntStringKey)key).getStrVal();
+        int seed = ((IntStringKey)key).getIntVal();
+        
+        List<Character> substitutionKey = new ArrayList<Character>();
+        for(Character c : ALPHABET.toCharArray())
+            substitutionKey.add(c);
+        Collections.shuffle(substitutionKey, new Random(seed));
+        
+        Map<String, Character> reverseCipherTable = new HashMap<String, Character>();
+        int j = 0;
+        for(Character c : CIPHER.toCharArray())
+            for(Character c2: CIPHER.toCharArray())
+                reverseCipherTable.put(""+c+c2, substitutionKey.get(j++));
+        
         StringBuilder sb = new StringBuilder(encoded.length());
         int col = encoded.length()/transportationKey.length();
         List<CipherColumn> sortedTKeyTable = new ArrayList<CipherColumn>(transportationKey.length());
@@ -72,7 +86,7 @@ public class ADFGVXCipher implements Cipher
         for(Character c : transportationKey.toCharArray())
             sortedTKey.add(c);
         Collections.sort(sortedTKey);
-        int j = 0;
+        j = 0;
         for(int i = 0 ; i < encoded.length(); i += col)
         {
             sortedTKeyTable.add(new CipherColumn(sortedTKey.get(j)));
@@ -149,14 +163,14 @@ public class ADFGVXCipher implements Cipher
         }
     }
     
-    public static void main(String[] args)
+    public static void main(String[] args) throws WrongKeyException
     {
-        String key = "PROGRAMMER";
-        ADFGVXCipher cipher = new ADFGVXCipher(key);
+        Key key = new IntStringKey(42, "PROGRAMMER");
+        ADFGVXCipher cipher = new ADFGVXCipher();
         String message = "Wow what a great example message this is";
-        String encrypted = cipher.encrypt(message);
+        String encrypted = cipher.encrypt(message, key);
         System.out.println(encrypted);
-        String decrypted = cipher.decrypt(encrypted);
+        String decrypted = cipher.decrypt(encrypted,key);
         System.out.println(decrypted);
     }
 
